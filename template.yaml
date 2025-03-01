@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Grocery Shopping Lambda Functions
+
+Resources:
+  GroceryShoppingListifyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./GroceryShopping.Lambda.Listify/src/GroceryShopping.Lambda.Listify
+      Handler: GroceryShopping.Lambda.Listify::GroceryShopping.Lambda.Listify.Function::Handler
+      Runtime: dotnet8
+      Timeout: 900
+      MemorySize: 128
+      FunctionName: grocery-shopping-listify-dotnet
+      ReservedConcurrentExecutions: 1
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/GroceryShopping"
+
+  GroceryShoppingScheduleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./GroceryShopping.Lambda.Schedule/src/GroceryShopping.Lambda.Schedule
+      Handler: GroceryShopping.Lambda.Schedule::GroceryShopping.Lambda.Schedule.Function::Handler
+      Runtime: dotnet8
+      Timeout: 900
+      MemorySize: 128
+      FunctionName: grocery-shopping-schedule-dotnet
+      ReservedConcurrentExecutions: 1
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParametersByPath
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/GroceryShopping"
+
+  GroceryShoppingShopFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./GroceryShopping.Lambda.Shop/src/GroceryShopping.Lambda.Shop
+      Handler: GroceryShopping.Lambda.Shop::GroceryShopping.Lambda.Shop.Function::Handler
+      Runtime: dotnet8
+      Timeout: 900
+      MemorySize: 512
+      FunctionName: grocery-shopping-shop-dotnet
+      ReservedConcurrentExecutions: 1
+      EventInvokeConfig:
+        MaximumRetryAttempts: 0
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                ssm:GetParametersByPath
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/GroceryShopping"
