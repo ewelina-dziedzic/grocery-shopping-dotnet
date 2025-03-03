@@ -14,12 +14,21 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
 
     public async Task LoadAsync(IEnumerable<ShoppingListItem> shoppingList)
     {
+        var groceryItems = (await GetGroceryListAsync()).Select(groceryItem => groceryItem.Name.Trim()).ToHashSet();
+
         foreach (var shoppingListItem in shoppingList)
         {
+            if (groceryItems.Contains(shoppingListItem.Name.Trim()))
+            {
+                continue;
+            }
+
+            var content = shoppingListItem.Quantity == 1
+                ? shoppingListItem.Name
+                : $"{shoppingListItem.Quantity}x {shoppingListItem.Name}";
+
             var task = new TodoistCreateTask(
-                shoppingListItem.Quantity == 1
-                    ? shoppingListItem.Name
-                    : $"{shoppingListItem.Quantity}x {shoppingListItem.Name}",
+                content,
                 shoppingListItem.NeededForDate?.ToString("yyyy-MM-dd"),
                 shoppingListItem.StoreLink);
 
