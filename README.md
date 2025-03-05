@@ -2,7 +2,7 @@
 
 This project automates the process of grocery shopping by leveraging low-code tools, custom scripts, and AI. It streamlines grocery list generation, scheduling of groceries delivery, and online shopping cart population, saving time, reducing food waste, and eliminating repetitive tasks.
 
-Using a combination of platforms like Notion, Make.com, and AWS Lambda, alongside an LLM (Large Language Model), the system ensures personalized grocery shopping based on your meal plan and ad-hoc grocery needs.
+Using a combination of platforms like Notion, Make.com, and AWS Lambda, alongside an LLM (Large Language Model), the system ensures personalized grocery shopping based on my meal plan and ad-hoc grocery needs.
 
 This repository contains custom code for managing grocery shopping lists, scheduling deliveries with my preferred online store and automating the process of populating my shopping cart.
 
