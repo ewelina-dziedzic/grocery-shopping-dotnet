@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		.gitignore = .gitignore
 		.github\workflows\ci-cd.yml = .github\workflows\ci-cd.yml
 		README.md = README.md
+		stylecop.ruleset = stylecop.ruleset
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GroceryShopping.Infrastructure.IntegrationTests", "GroceryShopping.Infrastructure.IntegrationTests\GroceryShopping.Infrastructure.IntegrationTests.csproj", "{687D317E-CE71-46A1-97AA-C5094FF1E3D6}"

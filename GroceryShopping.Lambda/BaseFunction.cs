@@ -21,16 +21,6 @@ public abstract class BaseFunction
 
     protected ServiceProvider ServiceProvider { get; } = ConfigureServices();
 
-    private static ServiceProvider ConfigureServices()
-    {
-        var configuration = new ConfigurationBuilder().AddSystemsManager("/GroceryShopping").Build();
-
-        var services = new ServiceCollection();
-        services.AddInfrastructure(configuration);
-        services.AddApplication();
-        return services.BuildServiceProvider();
-    }
-
     protected async Task<TOutput> ExecuteWithExceptionsHandling<TOutput>(Func<Task<TOutput>> action)
     {
         try
@@ -42,5 +32,15 @@ public abstract class BaseFunction
             await _notifier.SendAsync($"\ud83d\udca5 error: {exception.Message}");
             throw;
         }
+    }
+
+    private static ServiceProvider ConfigureServices()
+    {
+        var configuration = new ConfigurationBuilder().AddSystemsManager("/GroceryShopping").Build();
+
+        var services = new ServiceCollection();
+        services.AddInfrastructure(configuration);
+        services.AddApplication();
+        return services.BuildServiceProvider();
     }
 }

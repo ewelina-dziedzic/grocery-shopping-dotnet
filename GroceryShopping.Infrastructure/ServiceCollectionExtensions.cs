@@ -28,12 +28,11 @@ public static class ServiceCollectionExtensions
             nameof(HttpClientName.Todoist),
             client =>
             {
+                var token = configuration[$"Todoist:{nameof(TodoistOptions.ApiKey)}"] ??
+                            throw new InvalidOperationException($"Todoist:{nameof(TodoistOptions.ApiKey)} is missing");
                 client.BaseAddress = new Uri("https://api.todoist.com");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                    "Bearer",
-                    configuration[$"Todoist:{nameof(TodoistOptions.ApiKey)}"] ??
-                    throw new InvalidOperationException($"Todoist:{nameof(TodoistOptions.ApiKey)} is missing"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             });
 
         services.AddHttpClient(
@@ -41,8 +40,7 @@ public static class ServiceCollectionExtensions
             client =>
             {
                 client.BaseAddress = new Uri("https://www.frisco.pl");
-                client.DefaultRequestHeaders.Referrer =
-                    new Uri("https://www.frisco.com");
+                client.DefaultRequestHeaders.Referrer = new Uri("https://www.frisco.com");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
 

@@ -38,7 +38,8 @@ public class OpenAI : ILlm
         {
             Thread.Sleep(TimeSpan.FromSeconds(2));
             threadRun = _assistantClient.GetRun(threadRun.ThreadId, threadRun.Id);
-        } while (!threadRun.Status.IsTerminal);
+        }
+        while (!threadRun.Status.IsTerminal);
 
         if (threadRun.Status != RunStatus.Completed)
         {

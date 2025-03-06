@@ -99,18 +99,22 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
 
             var availableProducts = foundProducts.Products.Select(product => product.Product)
                 .Where(product => product.IsAvailable).Select(
-                    friscoProduct => new Product(
-                        friscoProduct.Id,
-                        friscoProduct.Name.Pl,
-                        friscoProduct.PackSize,
-                        friscoProduct.UnitOfMeasure,
-                        friscoProduct.Grammage,
-                        friscoProduct.Price.Price,
-                        friscoProduct.Price.PriceAfterPromotion,
-                        friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToList(),
-                        productsInFeed.TryGetValue(friscoProduct.Id, out var value)
-                            ? value.ContentData.Components
-                            : [])).ToList();
+                    friscoProduct =>
+                    {
+                        var components = productsInFeed.TryGetValue(friscoProduct.Id, out var feedProduct)
+                            ? feedProduct.ContentData.Components
+                            : [];
+                        return new Product(
+                            friscoProduct.Id,
+                            friscoProduct.Name.Pl,
+                            friscoProduct.PackSize,
+                            friscoProduct.UnitOfMeasure,
+                            friscoProduct.Grammage,
+                            friscoProduct.Price.Price,
+                            friscoProduct.Price.PriceAfterPromotion,
+                            friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToList(),
+                            components);
+                    }).ToList();
 
             var choice = llm.Ask(groceryItem.Name, availableProducts);
             await logger.LogChoice(groceryShoppingId, groceryItem, choice);

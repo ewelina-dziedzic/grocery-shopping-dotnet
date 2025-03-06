@@ -37,11 +37,11 @@ public class FriscoStoreTests
             new GroceryItem("Jajka", 1, "2"),
             new GroceryItem("Mleko", 3, "3"),
             new GroceryItem("Marchewka", 1, "5"),
-            new GroceryItem("Pietruszka", 1, "6")
+            new GroceryItem("Pietruszka", 1, "6"),
         };
 
         var boughtGroceryItems = await _store.ShopAsync(groceryItems);
-        
+
         Assert.That(boughtGroceryItems, Is.Not.Empty);
     }
 }
