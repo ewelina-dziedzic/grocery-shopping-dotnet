@@ -41,7 +41,7 @@ public class NotionMealPlan(IOptions<NotionOptions> options) : IMealPlan
         {
             var ingredientProperty = page.Properties["Ingredient"] as TitlePropertyValue;
             var quantityProperty = page.Properties["Quantity"] as NumberPropertyValue;
-            var neededForDateProperty = page.Properties["Needed for date"] as DatePropertyValue;
+            var neededForDateProperty = page.Properties["Needed for date"] as FormulaPropertyValue;
             var storeLinkProperty = page.Properties["Frisco"] as FormulaPropertyValue;
 
             var productName = ingredientProperty?.Title.FirstOrDefault()?.PlainText;
@@ -49,7 +49,7 @@ public class NotionMealPlan(IOptions<NotionOptions> options) : IMealPlan
                 new ShoppingListItem(
                     productName ?? throw new InvalidOperationException("Product name can't be null"),
                     Convert.ToInt32(quantityProperty?.Number ?? 1),
-                    neededForDateProperty?.Date.Start,
+                    neededForDateProperty?.Formula.Date?.Start,
                     storeLinkProperty?.Formula?.String));
         }
 
