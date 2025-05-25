@@ -9,4 +9,7 @@ public class TodoistReadTask
 
     [JsonPropertyName("content")]
     public string Content { get; set; } = null!;
+
+    [JsonPropertyName("labels")]
+    public string[] Labels { get; set; } = null!;
 }

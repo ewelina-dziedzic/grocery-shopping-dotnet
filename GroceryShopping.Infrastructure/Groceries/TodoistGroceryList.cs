@@ -53,12 +53,12 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
 
         foreach (var task in tasks)
         {
-            var productName = task.Content;
-            if (productName.StartsWith("local"))
+            if (task.Labels.Any())
             {
                 continue;
             }
 
+            var productName = task.Content;
             var productWithQuantity = Regex.Match(productName, @"^([0-9]+)x (.*?)$");
             if (productWithQuantity.Success)
             {
