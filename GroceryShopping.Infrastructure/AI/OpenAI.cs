@@ -2,7 +2,7 @@
 using System.Text.Json;
 
 using GroceryShopping.Core;
-using GroceryShopping.Core.Entities;
+using GroceryShopping.Core.Model;
 
 using Microsoft.Extensions.Options;
 

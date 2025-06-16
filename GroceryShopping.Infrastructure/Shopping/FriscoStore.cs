@@ -1,5 +1,5 @@
 ﻿using GroceryShopping.Core;
-using GroceryShopping.Core.Entities;
+using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.Network;
 
 namespace GroceryShopping.Infrastructure.Shopping;
@@ -17,6 +17,36 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
         "isPositioned",
         "isBargain",
     ];
+
+    public async Task<IReadOnlyCollection<FeedProduct>> GetAllProductsAsync()
+    {
+        var productsFeed = await httpClient.GetAsync<FriscoProductsFeed>(
+            HttpClientName.FriscoPublic,
+            "/api/v1/integration/feeds/public?language=pl");
+
+        if (productsFeed == null)
+        {
+            throw new InvalidOperationException("No products feed found");
+        }
+
+        return productsFeed.Products.Select(
+            product => new FeedProduct(
+                product.ProductId,
+                product.Ean,
+                product.Name.Pl,
+                product.Description,
+                product.Producer,
+                product.Brand,
+                product.Subbrand,
+                product.Supplier,
+                product.PackSize,
+                product.UnitOfMeasure,
+                product.Grammage,
+                product.CountryOfOrigin,
+                product.ImageUrl,
+                product.Tags,
+                product.Categories.Select(category => category.Name.Pl))).ToList();
+    }
 
     public async Task<DeliveryWindow?> ScheduleAsync(string[] preferredStartTime)
     {
@@ -75,16 +105,6 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
         await httpClient.DeleteAsync(
             HttpClientName.FriscoUser,
             $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/cart");
-        var productsFeed = await httpClient.GetAsync<FriscoProductsFeed>(
-            HttpClientName.FriscoPublic,
-            "/api/v1/integration/feeds/public?language=pl");
-
-        if (productsFeed == null)
-        {
-            throw new InvalidOperationException("No products feed found");
-        }
-
-        var productsInFeed = productsFeed.Products.ToDictionary(product => product.ProductId);
 
         foreach (var groceryItem in groceryItems)
         {
@@ -101,9 +121,6 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
                 .Where(product => product.IsAvailable).Select(
                     friscoProduct =>
                     {
-                        var components = productsInFeed.TryGetValue(friscoProduct.Id, out var feedProduct)
-                            ? feedProduct.ContentData.Components
-                            : [];
                         return new Product(
                             friscoProduct.Id,
                             friscoProduct.Name.Pl,
@@ -113,7 +130,7 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
                             friscoProduct.Price.Price,
                             friscoProduct.Price.PriceAfterPromotion,
                             friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToList(),
-                            components);
+                            []);
                     }).ToList();
 
             var choice = llm.Ask(groceryItem.Name, availableProducts);
@@ -138,8 +155,7 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
                     [
                         new FriscoShoppingCartProduct
                         {
-                            ProductId = choice.Product.Id,
-                            Quantity = groceryItem.Quantity,
+                            ProductId = choice.Product.Id, Quantity = groceryItem.Quantity,
                         },
                     ],
                 });

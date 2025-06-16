@@ -1,0 +1,1 @@
+dotnet ef migrations add %1 --project GroceryShopping.Infrastructure --startup-project GroceryShopping.Database --output-dir Database/Migrations

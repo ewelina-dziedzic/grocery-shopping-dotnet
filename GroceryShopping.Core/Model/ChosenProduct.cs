@@ -1,4 +1,4 @@
-﻿namespace GroceryShopping.Core.Entities;
+﻿namespace GroceryShopping.Core.Model;
 
 public class ChosenProduct(string id, string name, float price, float priceAfterPromotion)
 {

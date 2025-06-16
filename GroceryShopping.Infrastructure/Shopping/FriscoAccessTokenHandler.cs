@@ -23,7 +23,7 @@ public class FriscoAccessTokenHandler(IHttpNamedClient httpClient, IOptions<Fris
     {
         var token = await GetAccessTokenAsync();
         request.Headers.Authorization = new AuthenticationHeaderValue(token.TokenType, token.AccessToken);
-        request.RequestUri = new Uri(request.RequestUri.ToString().Replace(UserIdPlaceholder, token.UserId));
+        request.RequestUri = new Uri(request.RequestUri!.ToString().Replace(UserIdPlaceholder, token.UserId));
         return await base.SendAsync(request, cancellationToken);
     }
 

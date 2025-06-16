@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 
 using GroceryShopping.Core;
-using GroceryShopping.Core.Entities;
+using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.Network;
 
 using Microsoft.Extensions.Options;

@@ -1,6 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿namespace GroceryShopping.Infrastructure.Shopping;
 
-namespace GroceryShopping.Infrastructure.Shopping;
+using System.Text.Json.Serialization;
 
 public class FriscoProduct
 {

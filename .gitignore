@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 
 # AWS SAM
 .aws-sam/
+
+**/appsettings.local.json
+supabase/

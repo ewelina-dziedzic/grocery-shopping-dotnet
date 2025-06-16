@@ -1,4 +1,4 @@
-﻿namespace GroceryShopping.Core.Entities;
+﻿namespace GroceryShopping.Core.Model;
 
 public class ShoppingListItem(string name, int quantity, DateTime? neededForDate, string? storeLink)
 {

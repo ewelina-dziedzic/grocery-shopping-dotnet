@@ -1,5 +1,5 @@
 ﻿using GroceryShopping.Core;
-using GroceryShopping.Core.Entities;
+using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.Network;
 using GroceryShopping.Infrastructure.Shopping;
 

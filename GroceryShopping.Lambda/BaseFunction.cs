@@ -36,7 +36,10 @@ public abstract class BaseFunction
 
     private static ServiceProvider ConfigureServices()
     {
-        var configuration = new ConfigurationBuilder().AddSystemsManager("/GroceryShopping").Build();
+        var configuration = new ConfigurationBuilder()
+            .AddSystemsManager("/GroceryShopping")
+            .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
+            .Build();
 
         var services = new ServiceCollection();
         services.AddInfrastructure(configuration);

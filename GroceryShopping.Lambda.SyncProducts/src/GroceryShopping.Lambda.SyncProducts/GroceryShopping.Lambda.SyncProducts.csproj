@@ -3,7 +3,6 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>12</LangVersion>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
         <AWSProjectType>Lambda</AWSProjectType>
         <!-- This property makes the build directory similar to a publish directory and helps the AWS .NET Lambda Mock Test Tool find project dependencies. -->
@@ -12,10 +11,15 @@
         <PublishReadyToRun>true</PublishReadyToRun>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Amazon.Lambda.Core" Version="2.6.0" />
+        <PackageReference Include="Amazon.Lambda.Core" Version="2.5.0"/>
         <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4"/>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\..\GroceryShopping.Lambda\GroceryShopping.Lambda.csproj"/>
+      <ProjectReference Include="..\..\..\GroceryShopping.Lambda\GroceryShopping.Lambda.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Update="appsettings.local.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 </Project>

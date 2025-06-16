@@ -1,5 +1,5 @@
 ﻿using GroceryShopping.Core;
-using GroceryShopping.Core.Entities;
+using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.MealPlanning;
 
 using Microsoft.Extensions.Options;

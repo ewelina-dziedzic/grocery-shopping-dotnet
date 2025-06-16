@@ -1,9 +1,19 @@
 ﻿using GroceryShopping.Core;
+using GroceryShopping.Core.Model;
 
 namespace GroceryShopping.Application;
 
-public class StoreService(IStore store, IGroceryList list, INotifier notifier) : IStoreService
+public class StoreService(IStore store, IRepository<FeedProduct> productsRepository, IGroceryList list, INotifier notifier) : IStoreService
 {
+    public async Task SyncProductsAsync()
+    {
+        var products = await store.GetAllProductsAsync();
+        foreach (var product in products)
+        {
+            await productsRepository.AddAsync(product);
+        }
+    }
+
     public async Task<DeliveryWindow?> ScheduleAsync(string[] preferredStartTimes)
     {
         var deliveryWindow = await store.ScheduleAsync(preferredStartTimes);

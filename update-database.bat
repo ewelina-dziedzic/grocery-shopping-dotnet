@@ -1,0 +1,1 @@
+dotnet ef database update --project GroceryShopping.Infrastructure --startup-project GroceryShopping.Database

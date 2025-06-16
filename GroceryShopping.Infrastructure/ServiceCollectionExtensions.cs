@@ -1,7 +1,9 @@
 ﻿using System.Net.Http.Headers;
 
 using GroceryShopping.Core;
+using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.AI;
+using GroceryShopping.Infrastructure.Database;
 using GroceryShopping.Infrastructure.Groceries;
 using GroceryShopping.Infrastructure.Logging;
 using GroceryShopping.Infrastructure.MealPlanning;
@@ -9,6 +11,7 @@ using GroceryShopping.Infrastructure.Network;
 using GroceryShopping.Infrastructure.Notifications;
 using GroceryShopping.Infrastructure.Shopping;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -70,5 +73,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ILlm, AI.OpenAI>();
         services.AddTransient<INotifier, MakeNotifier>();
         services.AddTransient<ILogger, NotionLogger>();
+
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        services.AddDbContext<GroceryShoppingDbContext>(options =>
+            options.UseNpgsql(connectionString));
+        services.AddTransient<IRepository<FeedProduct>, ProductsRepository>();
     }
 }

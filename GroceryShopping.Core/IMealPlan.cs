@@ -1,4 +1,4 @@
-﻿using GroceryShopping.Core.Entities;
+﻿using GroceryShopping.Core.Model;
 
 namespace GroceryShopping.Core;
 

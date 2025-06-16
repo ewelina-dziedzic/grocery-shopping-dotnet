@@ -1,4 +1,4 @@
-﻿namespace GroceryShopping.Core.Entities;
+﻿namespace GroceryShopping.Core.Model;
 
 public class DeliveryWindow(DateTime startTime, DateTime endTime)
 {
