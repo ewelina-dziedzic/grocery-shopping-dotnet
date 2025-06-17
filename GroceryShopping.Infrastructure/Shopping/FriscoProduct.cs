@@ -7,8 +7,17 @@ public class FriscoProduct
     [JsonPropertyName("id")]
     public string Id { get; set; } = null!;
 
+    [JsonPropertyName("ean")]
+    public string Ean { get; set; } = string.Empty;
+
     [JsonPropertyName("name")]
     public FriscoProductName Name { get; set; } = null!;
+
+    [JsonPropertyName("producer")]
+    public string Producer { get; set; } = string.Empty;
+
+    [JsonPropertyName("countryOfOrigin")]
+    public string CountryOfOrigin { get; set; } = string.Empty;
 
     [JsonPropertyName("packSize")]
     public int PackSize { get; set; }
@@ -24,6 +33,9 @@ public class FriscoProduct
 
     [JsonPropertyName("tags")]
     public string[] Tags { get; set; } = [];
+
+    [JsonPropertyName("categories")]
+    public FriscoCategory[] Categories { get; set; } = [];
 
     [JsonPropertyName("isAvailable")]
     public bool IsAvailable { get; set; }

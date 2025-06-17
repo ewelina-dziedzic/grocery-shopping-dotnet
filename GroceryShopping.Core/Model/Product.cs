@@ -2,18 +2,27 @@
 
 public class Product(
     string id,
+    string ean,
     string name,
+    string producer,
+    string countryOfOrigin,
     int packSize,
     string unitOfMeasure,
     float grammage,
     float price,
     float priceAfterPromotion,
-    IReadOnlyCollection<string> tags,
-    string[] components)
+    string[] tags,
+    string[] categories)
 {
     public string Id { get; } = id;
 
+    public string Ean { get; set; } = ean;
+
     public string Name { get; } = name;
+
+    public string Producer { get; set; } = producer;
+
+    public string CountryOfOrigin { get; set; } = countryOfOrigin;
 
     public int PackSize { get; } = packSize;
 
@@ -25,7 +34,7 @@ public class Product(
 
     public float PriceAfterPromotion { get; } = priceAfterPromotion;
 
-    public IReadOnlyCollection<string> Tags { get; } = tags;
+    public string[] Tags { get; } = tags;
 
-    public string[] Components { get; } = components;
+    public string[] Categories { get; } = categories;
 }

@@ -123,14 +123,17 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
                     {
                         return new Product(
                             friscoProduct.Id,
+                            friscoProduct.Ean,
                             friscoProduct.Name.Pl,
+                            friscoProduct.Producer,
+                            friscoProduct.CountryOfOrigin,
                             friscoProduct.PackSize,
                             friscoProduct.UnitOfMeasure,
                             friscoProduct.Grammage,
                             friscoProduct.Price.Price,
                             friscoProduct.Price.PriceAfterPromotion,
-                            friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToList(),
-                            []);
+                            friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToArray(),
+                            friscoProduct.Categories.Select(category => category.Name.Pl).ToArray());
                     }).ToList();
 
             var choice = llm.Ask(groceryItem.Name, availableProducts);
