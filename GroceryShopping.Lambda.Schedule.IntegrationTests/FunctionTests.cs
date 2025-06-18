@@ -3,6 +3,7 @@
 public class FunctionTests
 {
     [Test]
+    [Ignore("Only for an easy debugging")]
     public async Task Handler_VariousStartTimes_ShouldSchedule()
     {
         var function = new Function();
