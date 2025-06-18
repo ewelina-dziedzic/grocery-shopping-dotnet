@@ -4,5 +4,5 @@ namespace GroceryShopping.Core;
 
 public interface ILlm
 {
-    Choice Ask(string productName, IEnumerable<Product> options);
+    Task<Choice> AskAsync(string productName, IEnumerable<Product> options);
 }

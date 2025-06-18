@@ -1,56 +1,49 @@
-﻿using System.ClientModel;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
+using GroceryShopping.Infrastructure.Network;
 
 using Microsoft.Extensions.Options;
 
-using OpenAI.Assistants;
+using OpenAI.Chat;
 
 namespace GroceryShopping.Infrastructure.AI;
 
-#pragma warning disable OPENAI001
 public class OpenAI : ILlm
 {
-    private readonly AssistantClient _assistantClient;
+    private readonly IHttpNamedClient _httpClient;
     private readonly OpenAIOptions _options;
 
-    public OpenAI(IOptions<OpenAIOptions> options)
+    private LangfusePrompt? _prompt = null;
+
+    public OpenAI(IOptions<OpenAIOptions> options, IHttpNamedClient httpClient)
     {
+        _httpClient = httpClient;
         _options = options.Value;
-        _assistantClient = new AssistantClient(new ApiKeyCredential(_options.ApiKey));
     }
 
-    public Choice Ask(string productName, IEnumerable<Product> options)
+    public async Task<Choice> AskAsync(string productName, IEnumerable<Product> options)
     {
         var optionsCollection = options.ToList();
-        var threadOptions = new ThreadCreationOptions
+
+        if (_prompt == null)
         {
-            InitialMessages =
+            _prompt = await _httpClient.GetAsync<LangfusePrompt>(
+                HttpClientName.Langfuse,
+                "/api/public/v2/prompts/grocery-shopping-assistant");
+            if (_prompt == null)
             {
-                $"Chcę kupić produkt o nazwie {productName}. Który produkt z listy powinnam kupić? {JsonSerializer.Serialize(optionsCollection)}",
-            },
-        };
-        ThreadRun threadRun = _assistantClient.CreateThreadAndRun(_options.GroceryShoppingAssistantId, threadOptions);
-
-        do
-        {
-            Thread.Sleep(TimeSpan.FromSeconds(2));
-            threadRun = _assistantClient.GetRun(threadRun.ThreadId, threadRun.Id);
-        }
-        while (!threadRun.Status.IsTerminal);
-
-        if (threadRun.Status != RunStatus.Completed)
-        {
-            throw new OpenAIThreadRunFailedException(threadRun.Status);
+                throw new InvalidOperationException("No response was returned from Langfuse");
+            }
         }
 
-        var messages = _assistantClient.GetMessages(
-            threadRun.ThreadId,
-            new MessageCollectionOptions { Order = MessageCollectionOrder.Ascending });
-
-        var message = messages.Last().Content.Last().Text;
+        var chatClient = new ChatClient(model: _prompt.Config.Model, apiKey: _options.ApiKey);
+        var messages = _prompt.Prompt.Select(message => BuildChatMessage(message, productName, optionsCollection))
+            .ToList();
+        var completion = await chatClient.CompleteChatAsync(messages);
+        var message = completion.Value.Content.Last().Text.Replace("```json", string.Empty)
+            .Replace("```", string.Empty);
         var answer = JsonSerializer.Deserialize<OpenAIResponse>(message);
 
         if (string.IsNullOrEmpty(answer.Id))
@@ -70,5 +63,23 @@ public class OpenAI : ILlm
             answer.Reason,
             new ChosenProduct(answer.Id, answer.Name, chosenOption.Price, chosenOption.PriceAfterPromotion));
     }
+
+    private static ChatMessage BuildChatMessage(
+        LangfuseChatMessage message,
+        string productName,
+        List<Product> optionsCollection)
+    {
+        switch (Enum.Parse<ChatMessageRole>(message.Role, ignoreCase: true))
+        {
+            case ChatMessageRole.System:
+                return new SystemChatMessage(message.Content);
+            case ChatMessageRole.User:
+                var compiledPrompt = message.Content.Replace("{{product_name}}", productName).Replace(
+                    "{{options}}",
+                    JsonSerializer.Serialize(optionsCollection));
+                return new UserChatMessage(compiledPrompt);
+            default:
+                throw new InvalidOperationException($"Unknown message role: {message.Role}");
+        }
+    }
 }
-#pragma warning restore OPENAI001

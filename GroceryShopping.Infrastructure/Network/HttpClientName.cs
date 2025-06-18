@@ -11,4 +11,6 @@ public enum HttpClientName
     FriscoPublic,
 
     Plain,
+
+    Langfuse,
 }

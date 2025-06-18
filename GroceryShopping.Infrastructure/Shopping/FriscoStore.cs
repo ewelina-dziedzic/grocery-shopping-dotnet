@@ -136,7 +136,7 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
                             friscoProduct.Categories.Select(category => category.Name.Pl).ToArray());
                     }).ToList();
 
-            var choice = llm.Ask(groceryItem.Name, availableProducts);
+            var choice = await llm.AskAsync(groceryItem.Name, availableProducts);
             await logger.LogChoice(groceryShoppingId, groceryItem, choice);
 
             if (!choice.IsProductChosen)

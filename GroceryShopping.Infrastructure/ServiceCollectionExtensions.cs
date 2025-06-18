@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Headers;
+using System.Text;
 
 using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
@@ -26,6 +27,7 @@ public static class ServiceCollectionExtensions
         services.Configure<FriscoOptions>(configuration.GetSection("Frisco"));
         services.Configure<OpenAIOptions>(configuration.GetSection("OpenAI"));
         services.Configure<MakeOptions>(configuration.GetSection("Make"));
+        services.Configure<LangfuseOptions>(configuration.GetSection("Langfuse"));
 
         services.AddHttpClient(
             nameof(HttpClientName.Todoist),
@@ -61,6 +63,23 @@ public static class ServiceCollectionExtensions
             {
                 client.BaseAddress = new Uri("https://commerce.frisco.pl");
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            });
+
+        services.AddHttpClient(
+            nameof(HttpClientName.Langfuse),
+            client =>
+            {
+                var host = configuration[$"Langfuse:{nameof(LangfuseOptions.Host)}"] ??
+                           throw new InvalidOperationException($"Langfuse:{nameof(LangfuseOptions.Host)} is missing");
+                var publicKey = configuration[$"Langfuse:{nameof(LangfuseOptions.PublicKey)}"] ??
+                            throw new InvalidOperationException($"Langfuse:{nameof(LangfuseOptions.PublicKey)} is missing");
+                var secretKey = configuration[$"Langfuse:{nameof(LangfuseOptions.SecretKey)}"] ??
+                                throw new InvalidOperationException($"Langfuse:{nameof(LangfuseOptions.SecretKey)} is missing");
+                client.BaseAddress = new Uri(host);
+                var credentials = $"{publicKey}:{secretKey}";
+                var base64Credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(credentials));
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", base64Credentials);
             });
 
         services.AddHttpClient(nameof(HttpClientName.Plain));
