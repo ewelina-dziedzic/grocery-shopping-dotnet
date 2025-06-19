@@ -4,7 +4,11 @@ using GroceryShopping.Infrastructure.Network;
 
 namespace GroceryShopping.Infrastructure.Shopping;
 
-public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) : IStore
+public class FriscoStore(
+    IHttpNamedClient httpClient,
+    ILlm llm,
+    ILogger logger,
+    IRepository<FeedProduct> productRepository) : IStore
 {
     private static readonly string[] TagsToIgnore =
     [
@@ -102,6 +106,7 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
     {
         var boughtGroceryItems = new List<GroceryItem>();
         var groceryShoppingId = await logger.LogShoppingStart("Frisco");
+
         await httpClient.DeleteAsync(
             HttpClientName.FriscoUser,
             $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/cart");
@@ -117,24 +122,35 @@ public class FriscoStore(IHttpNamedClient httpClient, ILlm llm, ILogger logger) 
                 throw new InvalidOperationException("Found products collection must not be null");
             }
 
-            var availableProducts = foundProducts.Products.Select(product => product.Product)
-                .Where(product => product.IsAvailable).Select(
-                    friscoProduct =>
-                    {
-                        return new Product(
-                            friscoProduct.Id,
-                            friscoProduct.Ean,
-                            friscoProduct.Name.Pl,
-                            friscoProduct.Producer,
-                            friscoProduct.CountryOfOrigin,
-                            friscoProduct.PackSize,
-                            friscoProduct.UnitOfMeasure,
-                            friscoProduct.Grammage,
-                            friscoProduct.Price.Price,
-                            friscoProduct.Price.PriceAfterPromotion,
-                            friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToArray(),
-                            friscoProduct.Categories.Select(category => category.Name.Pl).ToArray());
-                    }).ToList();
+            var availableProducts = new List<Product>();
+
+            foreach (var product in foundProducts.Products)
+            {
+                var friscoProduct = product.Product;
+
+                if (!friscoProduct.IsAvailable)
+                {
+                    continue;
+                }
+
+                var feedProduct = await productRepository.GetBySourceIdAsync(friscoProduct.Id);
+                var productModel = new Product(
+                    friscoProduct.Id,
+                    friscoProduct.Ean,
+                    friscoProduct.Name.Pl,
+                    friscoProduct.Producer,
+                    friscoProduct.CountryOfOrigin,
+                    friscoProduct.PackSize,
+                    friscoProduct.UnitOfMeasure,
+                    friscoProduct.Grammage,
+                    friscoProduct.Price.Price,
+                    friscoProduct.Price.PriceAfterPromotion,
+                    friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToArray(),
+                    friscoProduct.Categories.Select(category => category.Name.Pl).ToArray(),
+                    feedProduct?.Description ?? string.Empty);
+
+                availableProducts.Add(productModel);
+            }
 
             var choice = await llm.AskAsync(groceryItem.Name, availableProducts);
             await logger.LogChoice(groceryShoppingId, groceryItem, choice);

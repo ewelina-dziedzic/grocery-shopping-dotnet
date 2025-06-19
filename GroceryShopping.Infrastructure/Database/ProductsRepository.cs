@@ -1,6 +1,8 @@
 ﻿using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
 
+using Microsoft.EntityFrameworkCore;
+
 using Product = GroceryShopping.Infrastructure.Database.Entities.Product;
 
 namespace GroceryShopping.Infrastructure.Database;
@@ -37,5 +39,33 @@ public class ProductsRepository(GroceryShoppingDbContext context) : IRepository<
         };
         await context.Products.AddAsync(entity);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<FeedProduct?> GetBySourceIdAsync(string sourceId)
+    {
+        var entity = await context.Products.FirstOrDefaultAsync(product => product.SourceId == sourceId);
+        if (entity == null)
+        {
+            return null;
+        }
+
+        var model = new FeedProduct(
+            entity.SourceId,
+            entity.Ean,
+            entity.Name,
+            entity.Description,
+            entity.Producer,
+            entity.Brand,
+            entity.Subbrand,
+            entity.Supplier,
+            entity.PackSize,
+            entity.UnitOfMeasure,
+            entity.Grammage,
+            entity.CountryOfOrigin,
+            entity.ImageUrl,
+            entity.Tags,
+            entity.Categories);
+
+        return model;
     }
 }

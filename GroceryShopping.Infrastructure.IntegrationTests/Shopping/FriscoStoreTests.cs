@@ -25,7 +25,8 @@ public class FriscoStoreTests
         _store = new FriscoStore(
             serviceProvider.GetRequiredService<IHttpNamedClient>(),
             serviceProvider.GetRequiredService<ILlm>(),
-            Mock.Of<ILogger>());
+            Mock.Of<ILogger>(),
+            serviceProvider.GetRequiredService<IRepository<FeedProduct>>());
     }
 
     [Test]

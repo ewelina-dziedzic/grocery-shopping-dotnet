@@ -12,7 +12,8 @@ public class Product(
     float price,
     float priceAfterPromotion,
     string[] tags,
-    string[] categories)
+    string[] categories,
+    string description)
 {
     public string Id { get; } = id;
 
@@ -37,4 +38,6 @@ public class Product(
     public string[] Tags { get; } = tags;
 
     public string[] Categories { get; } = categories;
+
+    public string Description { get; } = description;
 }
