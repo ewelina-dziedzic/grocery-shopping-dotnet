@@ -4,6 +4,9 @@ namespace GroceryShopping.Infrastructure.AI;
 
 public class LangfusePrompt
 {
+    [JsonPropertyName("version")]
+    public int Version { get; set; }
+
     [JsonPropertyName("config")]
     public LangfuseConfig Config { get; set; } = null!;
 

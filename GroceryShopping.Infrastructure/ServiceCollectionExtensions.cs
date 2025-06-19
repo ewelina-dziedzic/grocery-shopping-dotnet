@@ -10,6 +10,7 @@ using GroceryShopping.Infrastructure.Logging;
 using GroceryShopping.Infrastructure.MealPlanning;
 using GroceryShopping.Infrastructure.Network;
 using GroceryShopping.Infrastructure.Notifications;
+using GroceryShopping.Infrastructure.Observability;
 using GroceryShopping.Infrastructure.Shopping;
 
 using Microsoft.EntityFrameworkCore;
@@ -92,6 +93,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ILlm, AI.OpenAI>();
         services.AddTransient<INotifier, MakeNotifier>();
         services.AddTransient<ILogger, NotionLogger>();
+        services.AddScoped<IProductSelectionTracing, LangfuseProductSelectionTracing>();
 
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<GroceryShoppingDbContext>(options =>
