@@ -1,6 +1,6 @@
-﻿namespace GroceryShopping.Core.Model;
+﻿namespace GroceryShopping.Infrastructure.ProductSelection;
 
-public class Product(
+public class PromptProductOption(
     string id,
     string ean,
     string name,
@@ -13,8 +13,6 @@ public class Product(
     float priceAfterPromotion,
     string[] tags,
     string[] categories,
-    string description,
-    string imageUrl,
     string packaging)
 {
     public string Id { get; } = id;
@@ -40,10 +38,6 @@ public class Product(
     public string[] Tags { get; } = tags;
 
     public string[] Categories { get; } = categories;
-
-    public string Description { get; } = description;
-
-    public string ImageUrl { get; set; } = imageUrl;
 
     public string Packaging { get; } = packaging;
 }

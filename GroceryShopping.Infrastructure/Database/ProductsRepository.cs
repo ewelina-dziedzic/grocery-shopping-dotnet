@@ -41,6 +41,34 @@ public class ProductsRepository(GroceryShoppingDbContext context) : IRepository<
         await context.SaveChangesAsync();
     }
 
+    public async Task UpdateAsync(FeedProduct model)
+    {
+        var entity = context.Products.FirstOrDefault(entity => entity.Id == model.Id);
+        if (entity == null)
+        {
+            throw new InvalidOperationException($"Entity with id {model.Id} not found.");
+        }
+
+        entity.Ean = model.Ean;
+        entity.Name = model.Name;
+        entity.Description = model.Description;
+        entity.Producer = model.Producer;
+        entity.Brand = model.Brand;
+        entity.Subbrand = model.Subbrand;
+        entity.Supplier = model.Supplier;
+        entity.PackSize = model.PackSize;
+        entity.UnitOfMeasure = model.UnitOfMeasure;
+        entity.Grammage = model.Grammage;
+        entity.CountryOfOrigin = model.CountryOfOrigin;
+        entity.ImageUrl = model.ImageUrl;
+        entity.Packaging = model.Packaging;
+        entity.Tags = model.Tags.ToArray();
+        entity.Categories = model.Categories.ToArray();
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        await context.SaveChangesAsync();
+    }
+
     public async Task<FeedProduct?> GetBySourceIdAsync(string sourceId)
     {
         var entity = await context.Products.FirstOrDefaultAsync(product => product.SourceId == sourceId);
@@ -50,6 +78,7 @@ public class ProductsRepository(GroceryShoppingDbContext context) : IRepository<
         }
 
         var model = new FeedProduct(
+            entity.Id,
             entity.SourceId,
             entity.Ean,
             entity.Name,
@@ -63,6 +92,7 @@ public class ProductsRepository(GroceryShoppingDbContext context) : IRepository<
             entity.Grammage,
             entity.CountryOfOrigin,
             entity.ImageUrl,
+            entity.Packaging,
             entity.Tags,
             entity.Categories);
 

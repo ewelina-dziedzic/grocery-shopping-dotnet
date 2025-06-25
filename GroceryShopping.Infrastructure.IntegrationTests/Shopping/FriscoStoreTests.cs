@@ -1,6 +1,8 @@
 ﻿using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.Network;
+using GroceryShopping.Infrastructure.Observability;
+using GroceryShopping.Infrastructure.ProductSelection;
 using GroceryShopping.Infrastructure.Shopping;
 
 using Microsoft.Extensions.Configuration;
@@ -17,16 +19,21 @@ public class FriscoStoreTests
     [SetUp]
     public void Setup()
     {
-        var configuration = new ConfigurationBuilder().AddSystemsManager("/GroceryShopping").Build();
+        var configuration = new ConfigurationBuilder().AddSystemsManager("/GroceryShopping").AddJsonFile(
+            "appsettings.local.json",
+            optional: true,
+            reloadOnChange: true).Build();
         var services = new ServiceCollection();
         services.AddInfrastructure(configuration);
         var serviceProvider = services.BuildServiceProvider();
 
         _store = new FriscoStore(
             serviceProvider.GetRequiredService<IHttpNamedClient>(),
-            serviceProvider.GetRequiredService<ILlm>(),
+            serviceProvider.GetRequiredService<IProductSelector>(),
             Mock.Of<ILogger>(),
-            serviceProvider.GetRequiredService<IRepository<FeedProduct>>());
+            serviceProvider.GetRequiredService<IRepository<FeedProduct>>(),
+            serviceProvider.GetRequiredService<IPackagingParser>(),
+            serviceProvider.GetRequiredService<IAddToCartTracing>());
     }
 
     [Test]

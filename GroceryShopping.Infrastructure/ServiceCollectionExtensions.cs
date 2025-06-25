@@ -3,7 +3,6 @@ using System.Text;
 
 using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
-using GroceryShopping.Infrastructure.AI;
 using GroceryShopping.Infrastructure.Database;
 using GroceryShopping.Infrastructure.Groceries;
 using GroceryShopping.Infrastructure.Logging;
@@ -11,6 +10,7 @@ using GroceryShopping.Infrastructure.MealPlanning;
 using GroceryShopping.Infrastructure.Network;
 using GroceryShopping.Infrastructure.Notifications;
 using GroceryShopping.Infrastructure.Observability;
+using GroceryShopping.Infrastructure.ProductSelection;
 using GroceryShopping.Infrastructure.Shopping;
 
 using Microsoft.EntityFrameworkCore;
@@ -73,14 +73,26 @@ public static class ServiceCollectionExtensions
                 var host = configuration[$"Langfuse:{nameof(LangfuseOptions.Host)}"] ??
                            throw new InvalidOperationException($"Langfuse:{nameof(LangfuseOptions.Host)} is missing");
                 var publicKey = configuration[$"Langfuse:{nameof(LangfuseOptions.PublicKey)}"] ??
-                            throw new InvalidOperationException($"Langfuse:{nameof(LangfuseOptions.PublicKey)} is missing");
+                                throw new InvalidOperationException(
+                                    $"Langfuse:{nameof(LangfuseOptions.PublicKey)} is missing");
                 var secretKey = configuration[$"Langfuse:{nameof(LangfuseOptions.SecretKey)}"] ??
-                                throw new InvalidOperationException($"Langfuse:{nameof(LangfuseOptions.SecretKey)} is missing");
+                                throw new InvalidOperationException(
+                                    $"Langfuse:{nameof(LangfuseOptions.SecretKey)} is missing");
                 client.BaseAddress = new Uri(host);
                 var credentials = $"{publicKey}:{secretKey}";
                 var base64Credentials = Convert.ToBase64String(Encoding.ASCII.GetBytes(credentials));
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Basic", base64Credentials);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Credentials);
+            });
+
+        services.AddHttpClient(
+            nameof(HttpClientName.OpenAI),
+            client =>
+            {
+                var token = configuration[$"OpenAI:{nameof(OpenAIOptions.ApiKey)}"] ??
+                            throw new InvalidOperationException($"OpenAI:{nameof(OpenAIOptions.ApiKey)} is missing");
+                client.BaseAddress = new Uri("https://api.openai.com");
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             });
 
         services.AddHttpClient(nameof(HttpClientName.Plain));
@@ -90,14 +102,14 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IGroceryList, TodoistGroceryList>();
         services.AddTransient<IMealPlan, NotionMealPlan>();
         services.AddTransient<IStore, FriscoStore>();
-        services.AddTransient<ILlm, AI.OpenAI>();
+        services.AddTransient<IProductSelector, OpenAIProductSelector>();
         services.AddTransient<INotifier, MakeNotifier>();
         services.AddTransient<ILogger, NotionLogger>();
-        services.AddScoped<IProductSelectionTracing, LangfuseProductSelectionTracing>();
+        services.AddScoped<IAddToCartTracing, LangfuseAddToCartTracing>();
+        services.AddTransient<IPackagingParser, OpenAIPackagingParser>();
 
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<GroceryShoppingDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        services.AddDbContext<GroceryShoppingDbContext>(options => options.UseNpgsql(connectionString));
         services.AddTransient<IRepository<FeedProduct>, ProductsRepository>();
     }
 }

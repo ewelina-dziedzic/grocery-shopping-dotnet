@@ -46,6 +46,9 @@ public class Product
     [MaxLength(1000)]
     public string ImageUrl { get; set; } = string.Empty;
 
+    [MaxLength(200)]
+    public string? Packaging { get; set; }
+
     public string[] Tags { get; set; } = [];
 
     public string[] Categories { get; set; } = [];

@@ -1,4 +1,4 @@
-﻿namespace GroceryShopping.Infrastructure.AI;
+﻿namespace GroceryShopping.Infrastructure.ProductSelection;
 
 public class LangfuseOptions
 {

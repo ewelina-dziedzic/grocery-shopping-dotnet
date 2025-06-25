@@ -1,19 +1,20 @@
 ﻿using GroceryShopping.Core.Model;
-using GroceryShopping.Infrastructure.AI;
 using GroceryShopping.Infrastructure.Network;
+using GroceryShopping.Infrastructure.ProductSelection;
 
 namespace GroceryShopping.Infrastructure.Observability;
 
-public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IProductSelectionTracing
+public class LangfuseAddToCartTracing(IHttpNamedClient httpClient) : IAddToCartTracing
 {
     private readonly string _sessionId = $"grocery-shopping-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}";
 
-    public async Task<(string TraceId, string SpanId)> StartTraceAsync(
-        string productName,
-        IReadOnlyCollection<Product> options)
+    private string? _traceId;
+    private string? _productSelectionSpanId;
+
+    public async Task StartTraceAsync(string productName)
     {
-        var traceId = Guid.NewGuid().ToString();
-        var spanId = Guid.NewGuid().ToString();
+        _traceId = Guid.NewGuid().ToString();
+
         var payload = new
         {
             batch = new object[]
@@ -25,12 +26,26 @@ public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IPro
                     timestamp = DateTime.UtcNow.ToString("o"),
                     body = new
                     {
-                        id = traceId,
+                        id = _traceId,
                         sessionId = _sessionId,
                         name = "add-to-cart",
                         input = new { productName, },
                     },
                 },
+            },
+        };
+
+        await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
+    }
+
+    public async Task StartProductSelectionAsync(string productName, IReadOnlyCollection<Product> options)
+    {
+        _productSelectionSpanId = Guid.NewGuid().ToString();
+
+        var payload = new
+        {
+            batch = new object[]
+            {
                 new
                 {
                     id = Guid.NewGuid().ToString(),
@@ -38,8 +53,8 @@ public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IPro
                     timestamp = DateTime.UtcNow.ToString("o"),
                     body = new
                     {
-                        id = spanId,
-                        traceId,
+                        id = _productSelectionSpanId,
+                        traceId = _traceId,
                         sessionId = _sessionId,
                         name = "product-selection",
                         startTime = DateTime.UtcNow.ToString("o"),
@@ -50,14 +65,11 @@ public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IPro
         };
 
         await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
-        return (traceId, spanId);
     }
 
-    public async Task AddChatCompletion(
-        string traceId,
-        string parentObservationId,
-        IEnumerable<ChatMessage> prompt,
-        OpenAIResponse completion,
+    public async Task AddChatCompletionAsync(
+        object prompt,
+        object completion,
         string model,
         string promptName,
         int promptVersion)
@@ -74,12 +86,12 @@ public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IPro
                     body = new
                     {
                         id = Guid.NewGuid().ToString(),
-                        traceId,
-                        parentObservationId,
+                        traceId = _traceId,
+                        parentObservationId = _productSelectionSpanId,
                         sessionId = _sessionId,
                         name = "chat-completion",
-                        input = new { prompt },
-                        output = new { completion, },
+                        input = prompt,
+                        output = completion,
                         model,
                         promptName,
                         promptVersion,
@@ -91,7 +103,7 @@ public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IPro
         await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
     }
 
-    public async Task EndTraceAsync(string spanId, Choice choice)
+    public async Task EndProductSelectionAsync(Choice choice)
     {
         var payload = new
         {
@@ -102,11 +114,19 @@ public class LangfuseProductSelectionTracing(IHttpNamedClient httpClient) : IPro
                     id = Guid.NewGuid().ToString(),
                     type = "span-update",
                     timestamp = DateTime.UtcNow.ToString("o"),
-                    body = new { id = spanId, endTime = DateTime.UtcNow.ToString("o"), output = choice, },
+                    body = new
+                    {
+                        id = _productSelectionSpanId,
+                        endTime = DateTime.UtcNow.ToString("o"),
+                        output = choice,
+                    },
                 },
             },
         };
 
         await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
+
+        _traceId = null;
+        _productSelectionSpanId = null;
     }
 }

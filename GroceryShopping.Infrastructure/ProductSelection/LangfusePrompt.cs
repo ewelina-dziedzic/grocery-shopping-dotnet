@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GroceryShopping.Infrastructure.AI;
+namespace GroceryShopping.Infrastructure.ProductSelection;
 
 public class LangfusePrompt
 {

@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
@@ -12,10 +14,12 @@ using OpenAI.Chat;
 using ChatMessage = OpenAI.Chat.ChatMessage;
 using ChatMessageForTracing = GroceryShopping.Infrastructure.Observability.ChatMessage;
 
-namespace GroceryShopping.Infrastructure.AI;
+namespace GroceryShopping.Infrastructure.ProductSelection;
 
-public class OpenAI(IOptions<OpenAIOptions> options, IHttpNamedClient httpClient, IProductSelectionTracing tracing)
-    : ILlm
+public class OpenAIProductSelector(
+    IOptions<OpenAIOptions> options,
+    IHttpNamedClient httpClient,
+    IAddToCartTracing tracing) : IProductSelector
 {
     private const string PromptName = "grocery-shopping-assistant";
 
@@ -24,10 +28,10 @@ public class OpenAI(IOptions<OpenAIOptions> options, IHttpNamedClient httpClient
     private LangfusePrompt? _prompt = null;
     private ChatClient? _chatClient = null;
 
-    public async Task<Choice> AskAsync(string productName, IEnumerable<Product> options)
+    public async Task<Choice> ChooseAsync(string productName, IEnumerable<Product> options)
     {
         var optionsCollection = options.ToList();
-        var trace = await tracing.StartTraceAsync(productName, optionsCollection);
+        await tracing.StartProductSelectionAsync(productName, optionsCollection);
 
         if (_prompt == null)
         {
@@ -42,20 +46,35 @@ public class OpenAI(IOptions<OpenAIOptions> options, IHttpNamedClient httpClient
             _chatClient = new ChatClient(model: _prompt.Config.Model, apiKey: _options.ApiKey);
         }
 
-        var messages = _prompt.Prompt.Select(message => BuildChatMessage(message, productName, optionsCollection))
+        var openAIOptionsCollection = optionsCollection.Select(
+            option => new PromptProductOption(
+                option.Id,
+                option.Ean,
+                option.Name,
+                option.Producer,
+                option.CountryOfOrigin,
+                option.PackSize,
+                option.UnitOfMeasure,
+                option.Grammage,
+                option.Price,
+                option.PriceAfterPromotion,
+                option.Tags,
+                option.Categories,
+                option.Packaging)).ToList();
+        var messages = _prompt.Prompt.Select(message => BuildChatMessage(message, productName, openAIOptionsCollection))
             .ToList();
         var completion = await _chatClient!.CompleteChatAsync(messages);
         var completionContent = completion.Value.Content.Last().Text;
         var prompt = messages.Select(
             message => new ChatMessageForTracing(GetRole(message), message.Content.Single().Text));
-        var answer = JsonSerializer.Deserialize<OpenAIResponse>(
+        var answer = JsonSerializer.Deserialize<ProductSelectionResponse>(
             completionContent.Replace("```json", string.Empty).Replace("```", string.Empty));
-        await tracing.AddChatCompletion(trace.TraceId, trace.SpanId, prompt, answer, _prompt.Config.Model, PromptName, _prompt.Version);
+        await tracing.AddChatCompletionAsync(prompt, answer, _prompt.Config.Model, PromptName, _prompt.Version);
 
         if (string.IsNullOrEmpty(answer.Id))
         {
             var productNotChosen = new Choice(false, answer.Reason);
-            await tracing.EndTraceAsync(trace.SpanId, productNotChosen);
+            await tracing.EndProductSelectionAsync(productNotChosen);
             return productNotChosen;
         }
 
@@ -70,14 +89,14 @@ public class OpenAI(IOptions<OpenAIOptions> options, IHttpNamedClient httpClient
             true,
             answer.Reason,
             new ChosenProduct(answer.Id, answer.Name, chosenOption.Price, chosenOption.PriceAfterPromotion));
-        await tracing.EndTraceAsync(trace.SpanId, productChosen);
+        await tracing.EndProductSelectionAsync(productChosen);
         return productChosen;
     }
 
     private static ChatMessage BuildChatMessage(
         LangfuseChatMessage message,
         string productName,
-        List<Product> optionsCollection)
+        List<PromptProductOption> optionsCollection)
     {
         switch (Enum.Parse<ChatMessageRole>(message.Role, ignoreCase: true))
         {

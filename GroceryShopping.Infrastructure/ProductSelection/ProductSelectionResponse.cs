@@ -1,8 +1,8 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace GroceryShopping.Infrastructure.AI;
+namespace GroceryShopping.Infrastructure.ProductSelection;
 
-public record struct OpenAIResponse
+public record struct ProductSelectionResponse
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }

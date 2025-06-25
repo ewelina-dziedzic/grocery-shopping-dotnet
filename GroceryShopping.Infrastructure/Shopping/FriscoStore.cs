@@ -1,14 +1,18 @@
 ﻿using GroceryShopping.Core;
 using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.Network;
+using GroceryShopping.Infrastructure.Observability;
+using GroceryShopping.Infrastructure.ProductSelection;
 
 namespace GroceryShopping.Infrastructure.Shopping;
 
 public class FriscoStore(
     IHttpNamedClient httpClient,
-    ILlm llm,
+    IProductSelector productSelector,
     ILogger logger,
-    IRepository<FeedProduct> productRepository) : IStore
+    IRepository<FeedProduct> productRepository,
+    IPackagingParser packagingParser,
+    IAddToCartTracing tracing) : IStore
 {
     private static readonly string[] TagsToIgnore =
     [
@@ -35,6 +39,7 @@ public class FriscoStore(
 
         return productsFeed.Products.Select(
             product => new FeedProduct(
+                null,
                 product.ProductId,
                 product.Ean,
                 product.Name.Pl,
@@ -48,6 +53,7 @@ public class FriscoStore(
                 product.Grammage,
                 product.CountryOfOrigin,
                 product.ImageUrl,
+                null,
                 product.Tags,
                 product.Categories.Select(category => category.Name.Pl))).ToList();
     }
@@ -113,9 +119,11 @@ public class FriscoStore(
 
         foreach (var groceryItem in groceryItems)
         {
+            await tracing.StartTraceAsync(groceryItem.Name);
+
             var foundProducts = await httpClient.GetAsync<FriscoProductsSearchResponse>(
                 HttpClientName.FriscoUser,
-                $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/offer/products/query?purpose=Listing&pageIndex=1&search={groceryItem.Name}&includeFacets=true&deliveryMethod=Van&pageSize=50&language=pl&disableAutocorrect=false");
+                $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/offer/products/query?purpose=Listing&pageIndex=1&search={groceryItem.Name}&includeFacets=true&deliveryMethod=Van&pageSize=20&language=pl&disableAutocorrect=false");
 
             if (foundProducts == null)
             {
@@ -134,6 +142,12 @@ public class FriscoStore(
                 }
 
                 var feedProduct = await productRepository.GetBySourceIdAsync(friscoProduct.Id);
+                if (feedProduct is { Packaging: null })
+                {
+                    feedProduct.Packaging = await packagingParser.ParseAsync(feedProduct);
+                    await productRepository.UpdateAsync(feedProduct);
+                }
+
                 var productModel = new Product(
                     friscoProduct.Id,
                     friscoProduct.Ean,
@@ -147,12 +161,14 @@ public class FriscoStore(
                     friscoProduct.Price.PriceAfterPromotion,
                     friscoProduct.Tags.Where(tag => !TagsToIgnore.Contains(tag)).ToArray(),
                     friscoProduct.Categories.Select(category => category.Name.Pl).ToArray(),
-                    feedProduct?.Description ?? string.Empty);
+                    feedProduct?.Description ?? string.Empty,
+                    feedProduct?.ImageUrl ?? string.Empty,
+                    feedProduct?.Packaging ?? string.Empty);
 
                 availableProducts.Add(productModel);
             }
 
-            var choice = await llm.AskAsync(groceryItem.Name, availableProducts);
+            var choice = await productSelector.ChooseAsync(groceryItem.Name, availableProducts);
             await logger.LogChoice(groceryShoppingId, groceryItem, choice);
 
             if (!choice.IsProductChosen)

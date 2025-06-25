@@ -1,6 +1,7 @@
 ﻿namespace GroceryShopping.Core.Model;
 
 public class FeedProduct(
+    int? id,
     string sourceId,
     string ean,
     string name,
@@ -14,9 +15,12 @@ public class FeedProduct(
     float grammage,
     string countryOfOrigin,
     string imageUrl,
+    string? packaging,
     IEnumerable<string> tags,
     IEnumerable<string> categories)
 {
+    public int? Id { get; } = id;
+
     public string SourceId { get; } = sourceId;
 
     public string Ean { get; } = ean;
@@ -42,6 +46,8 @@ public class FeedProduct(
     public string CountryOfOrigin { get; } = countryOfOrigin;
 
     public string ImageUrl { get; } = imageUrl;
+
+    public string? Packaging { get; set; } = packaging;
 
     public IEnumerable<string> Tags { get; } = tags;
 
