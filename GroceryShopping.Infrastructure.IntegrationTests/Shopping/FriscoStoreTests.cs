@@ -46,6 +46,8 @@ public class FriscoStoreTests
             new GroceryItem("Mleko", 3, "3"),
             new GroceryItem("Marchewka", 1, "5"),
             new GroceryItem("Pietruszka", 1, "6"),
+            new GroceryItem("Orzeszki ziemne", 1, "7"),
+            new GroceryItem("Makaron ryżowy", 1, "8"),
         };
 
         var boughtGroceryItems = await _store.ShopAsync(groceryItems);

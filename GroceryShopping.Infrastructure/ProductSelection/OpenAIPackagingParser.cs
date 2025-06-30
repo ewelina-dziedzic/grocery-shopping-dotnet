@@ -9,11 +9,14 @@ using Microsoft.Extensions.Options;
 namespace GroceryShopping.Infrastructure.ProductSelection;
 
 public class OpenAIPackagingParser(
-    IHttpNamedClient httpClient,
+    IHttpNamedClient httpNamedClient,
     IOptions<OpenAIOptions> options,
-    IAddToCartTracing tracing) : IPackagingParser
+    IAddToCartTracing tracing,
+    IHttpClientFactory httpClientFactory) : IPackagingParser
 {
     private const string PromptName = "product-packaging-parser";
+
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
 
     private readonly OpenAIOptions _options = options.Value;
 
@@ -23,7 +26,7 @@ public class OpenAIPackagingParser(
     {
         if (_prompt == null)
         {
-            _prompt = await httpClient.GetAsync<LangfusePrompt>(
+            _prompt = await httpNamedClient.GetAsync<LangfusePrompt>(
                 HttpClientName.Langfuse,
                 $"/api/public/v2/prompts/{PromptName}");
             if (_prompt == null)
@@ -37,6 +40,21 @@ public class OpenAIPackagingParser(
             product.Name,
             product.Description,
             product.Categories.ToArray());
+
+        var userMessageContent = new List<object>
+        {
+            new { type = "text", text = JsonSerializer.Serialize(promptProduct), },
+        };
+
+        if (!string.IsNullOrEmpty(product.ImageUrl))
+        {
+            var imageResponse = await _httpClient.GetAsync(product.ImageUrl);
+            if (imageResponse.IsSuccessStatusCode)
+            {
+                userMessageContent.Add(new { type = "image_url", image_url = new { url = product.ImageUrl } });
+            }
+        }
+
         var messages = new[]
         {
             new
@@ -51,18 +69,11 @@ public class OpenAIPackagingParser(
                     },
                 },
             },
-            new
-            {
-                role = "user",
-                content = new object[]
-                {
-                    new { type = "text", text = JsonSerializer.Serialize(promptProduct), },
-                    new { type = "image_url", image_url = new { url = product.ImageUrl }, },
-                },
-            },
+            new { role = "user", content = userMessageContent.ToArray(), },
         };
+
         var payload = new { model = _prompt.Config.Model, messages, };
-        var response = await httpClient.PostAsync<OpenAIResponse>(
+        var response = await httpNamedClient.PostAsync<OpenAIResponse>(
             HttpClientName.OpenAI,
             "/v1/chat/completions",
             payload);
