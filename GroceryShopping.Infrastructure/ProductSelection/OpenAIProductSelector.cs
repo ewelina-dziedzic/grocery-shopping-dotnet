@@ -69,7 +69,7 @@ public class OpenAIProductSelector(
             message => new ChatMessageForTracing(GetRole(message), message.Content.Single().Text));
         var answer = JsonSerializer.Deserialize<ProductSelectionResponse>(
             completionContent.Replace("```json", string.Empty).Replace("```", string.Empty));
-        await tracing.AddChatCompletionAsync(prompt, answer, _prompt.Config.Model, PromptName, _prompt.Version);
+        await tracing.AddChatCompletionAsync("product-selection-chat-completion", prompt, answer, _prompt.Config.Model, PromptName, _prompt.Version);
 
         if (string.IsNullOrEmpty(answer.Id))
         {

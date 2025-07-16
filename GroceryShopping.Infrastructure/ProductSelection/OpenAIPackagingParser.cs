@@ -80,7 +80,7 @@ public class OpenAIPackagingParser(
         var content = response.Choices.Last().Message.Content;
         var packaging = JsonSerializer.Deserialize<PackagingParsingResponse>(
             content.Replace("```json", string.Empty).Replace("```", string.Empty));
-        await tracing.AddChatCompletionAsync(messages, packaging, _prompt.Config.Model, PromptName, _prompt.Version);
+        await tracing.AddChatCompletionAsync("packaging-parsing-chat-completion", messages, packaging, _prompt.Config.Model, PromptName, _prompt.Version);
         return packaging.Packaging;
     }
 }

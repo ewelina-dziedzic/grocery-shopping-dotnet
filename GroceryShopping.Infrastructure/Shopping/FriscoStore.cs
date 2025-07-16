@@ -121,9 +121,13 @@ public class FriscoStore(
         {
             await tracing.StartTraceAsync(groceryItem.Name);
 
+            var productsSearchRequestUri =
+                $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/offer/products/query?purpose=Listing&pageIndex=1&search={groceryItem.Name}&includeFacets=true&deliveryMethod=Van&pageSize=20&language=pl&disableAutocorrect=false";
+            await tracing.StartApiRequest("products-search", productsSearchRequestUri);
             var foundProducts = await httpClient.GetAsync<FriscoProductsSearchResponse>(
                 HttpClientName.FriscoUser,
-                $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/offer/products/query?purpose=Listing&pageIndex=1&search={groceryItem.Name}&includeFacets=true&deliveryMethod=Van&pageSize=20&language=pl&disableAutocorrect=false");
+                productsSearchRequestUri);
+            await tracing.EndApiRequestAsync(foundProducts);
 
             if (foundProducts == null)
             {
@@ -181,19 +185,18 @@ public class FriscoStore(
                 throw new InvalidOperationException("Product must not be null when a product is chosen.");
             }
 
-            await httpClient.PutAsync(
-                HttpClientName.FriscoUser,
-                $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/cart",
-                new FriscoShoppingCartUpdateRequest
-                {
-                    Products =
-                    [
-                        new FriscoShoppingCartProduct
-                        {
-                            ProductId = choice.Product.Id, Quantity = groceryItem.Quantity,
-                        },
-                    ],
-                });
+            const string addToCartRequestUri =
+                $"/app/commerce/api/v1/users/{FriscoAccessTokenHandler.UserIdPlaceholder}/cart";
+            var requestBody = new FriscoShoppingCartUpdateRequest
+            {
+                Products =
+                [
+                    new FriscoShoppingCartProduct { ProductId = choice.Product.Id, Quantity = groceryItem.Quantity, },
+                ],
+            };
+            await tracing.StartApiRequest("add-to-cart", addToCartRequestUri, requestBody);
+            await httpClient.PutAsync(HttpClientName.FriscoUser, addToCartRequestUri, requestBody);
+            await tracing.EndApiRequestAsync();
             boughtGroceryItems.Add(groceryItem);
         }
 

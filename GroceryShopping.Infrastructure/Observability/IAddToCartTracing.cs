@@ -9,7 +9,11 @@ public interface IAddToCartTracing
 
     Task StartProductSelectionAsync(string productName, IReadOnlyCollection<Product> options);
 
-    Task AddChatCompletionAsync(object prompt, object completion, string model, string promptName, int promptVersion);
+    Task AddChatCompletionAsync(string chatCompletionName, object prompt, object completion, string model, string promptName, int promptVersion);
 
     Task EndProductSelectionAsync(Choice choice);
+
+    Task StartApiRequest(string requestType, string requestUri, object? requestBody = null);
+
+    Task EndApiRequestAsync(object? responseBody = null);
 }

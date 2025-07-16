@@ -1,6 +1,7 @@
 ﻿using GroceryShopping.Core.Model;
 using GroceryShopping.Infrastructure.Network;
 using GroceryShopping.Infrastructure.ProductSelection;
+using GroceryShopping.Infrastructure.Shopping;
 
 namespace GroceryShopping.Infrastructure.Observability;
 
@@ -10,6 +11,7 @@ public class LangfuseAddToCartTracing(IHttpNamedClient httpClient) : IAddToCartT
 
     private string? _traceId;
     private string? _productSelectionSpanId;
+    private string? _apiRequestSpanId;
 
     public async Task StartTraceAsync(string productName)
     {
@@ -68,6 +70,7 @@ public class LangfuseAddToCartTracing(IHttpNamedClient httpClient) : IAddToCartT
     }
 
     public async Task AddChatCompletionAsync(
+        string chatCompletionName,
         object prompt,
         object completion,
         string model,
@@ -89,7 +92,7 @@ public class LangfuseAddToCartTracing(IHttpNamedClient httpClient) : IAddToCartT
                         traceId = _traceId,
                         parentObservationId = _productSelectionSpanId,
                         sessionId = _sessionId,
-                        name = "chat-completion",
+                        name = chatCompletionName,
                         input = prompt,
                         output = completion,
                         model,
@@ -126,7 +129,61 @@ public class LangfuseAddToCartTracing(IHttpNamedClient httpClient) : IAddToCartT
 
         await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
 
-        _traceId = null;
         _productSelectionSpanId = null;
+    }
+
+    public async Task StartApiRequest(string requestType, string requestUri, object? requestBody)
+    {
+        _apiRequestSpanId = Guid.NewGuid().ToString();
+
+        var payload = new
+        {
+            batch = new object[]
+            {
+                new
+                {
+                    id = Guid.NewGuid().ToString(),
+                    type = "span-create",
+                    timestamp = DateTime.UtcNow.ToString("o"),
+                    body = new
+                    {
+                        id = _apiRequestSpanId,
+                        traceId = _traceId,
+                        sessionId = _sessionId,
+                        name = requestType,
+                        startTime = DateTime.UtcNow.ToString("o"),
+                        input = new { requestUri, requestBody, },
+                    },
+                },
+            },
+        };
+
+        await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
+    }
+
+    public async Task EndApiRequestAsync(object? responseBody)
+    {
+        var payload = new
+        {
+            batch = new object[]
+            {
+                new
+                {
+                    id = Guid.NewGuid().ToString(),
+                    type = "span-update",
+                    timestamp = DateTime.UtcNow.ToString("o"),
+                    body = new
+                    {
+                        id = _apiRequestSpanId,
+                        endTime = DateTime.UtcNow.ToString("o"),
+                        output = responseBody,
+                    },
+                },
+            },
+        };
+
+        await httpClient.PostAsync(HttpClientName.Langfuse, "/api/public/ingestion", payload);
+
+        _apiRequestSpanId = null;
     }
 }
