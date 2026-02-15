@@ -2,7 +2,7 @@
 
 namespace GroceryShopping.Infrastructure.Groceries;
 
-public class TodoistCreateTask(string content, string? dueString, string? description)
+public class TodoistCreateTask(string content, string? dueString, string? description, string projectId)
 {
     [JsonPropertyName("content")]
     public string Content { get; } = content;
@@ -12,4 +12,7 @@ public class TodoistCreateTask(string content, string? dueString, string? descri
 
     [JsonPropertyName("description")]
     public string? Description { get; } = description;
+
+    [JsonPropertyName("project_id")]
+    public string ProjectId { get; } = projectId;
 }
