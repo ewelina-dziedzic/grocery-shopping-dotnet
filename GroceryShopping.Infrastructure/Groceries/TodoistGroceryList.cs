@@ -34,7 +34,7 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
 
             await httpClient.PostAsync<TodoistReadTask>(
                 HttpClientName.Todoist,
-                $"/rest/v2/tasks?project_id={_todoistOptions.ProjectId}",
+                $"/rest/v1/tasks?project_id={_todoistOptions.ProjectId}",
                 task);
         }
     }
@@ -44,7 +44,7 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
         var result = new List<GroceryItem>();
         var tasks = await httpClient.GetAsync<TodoistReadTask[]>(
             HttpClientName.Todoist,
-            $"/rest/v2/tasks?project_id={_todoistOptions.ProjectId}");
+            $"/rest/v1/tasks?project_id={_todoistOptions.ProjectId}");
 
         if (tasks == null)
         {
@@ -81,7 +81,7 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
     {
         foreach (var groceryItem in groceryItems)
         {
-            await httpClient.PostAsync(HttpClientName.Todoist, $"/rest/v2/tasks/{groceryItem.TaskId}/close");
+            await httpClient.PostAsync(HttpClientName.Todoist, $"/rest/v1/tasks/{groceryItem.TaskId}/close");
         }
     }
 }
