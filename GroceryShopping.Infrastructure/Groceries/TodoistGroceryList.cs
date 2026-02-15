@@ -43,7 +43,7 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
     public async Task<IReadOnlyCollection<GroceryItem>> GetGroceryListAsync()
     {
         var result = new List<GroceryItem>();
-        var tasks = await httpClient.GetAsync<TodoistReadTask[]>(
+        var tasks = await httpClient.GetAsync<TodoistTasksResponse>(
             HttpClientName.Todoist,
             $"/api/v1/tasks?project_id={_todoistOptions.ProjectId}");
 
@@ -52,7 +52,7 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
             throw new InvalidOperationException("No tasks returned");
         }
 
-        foreach (var task in tasks)
+        foreach (var task in tasks.Results)
         {
             if (task.Labels.Any())
             {
