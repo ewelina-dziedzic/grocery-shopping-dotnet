@@ -30,11 +30,12 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
             var task = new TodoistCreateTask(
                 content,
                 shoppingListItem.NeededForDate?.ToString("yyyy-MM-dd"),
-                shoppingListItem.StoreLink);
+                shoppingListItem.StoreLink,
+                _todoistOptions.ProjectId);
 
             await httpClient.PostAsync<TodoistReadTask>(
                 HttpClientName.Todoist,
-                $"/api/v1/tasks?project_id={_todoistOptions.ProjectId}",
+                $"/api/v1/tasks",
                 task);
         }
     }
