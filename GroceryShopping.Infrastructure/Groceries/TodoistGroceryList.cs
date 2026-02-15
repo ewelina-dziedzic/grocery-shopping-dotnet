@@ -33,7 +33,7 @@ public class TodoistGroceryList(IHttpNamedClient httpClient, IOptions<TodoistOpt
                 shoppingListItem.StoreLink,
                 _todoistOptions.ProjectId);
 
-            await httpClient.PostAsync<TodoistReadTask>(
+            await httpClient.PostAsync(
                 HttpClientName.Todoist,
                 $"/api/v1/tasks",
                 task);
