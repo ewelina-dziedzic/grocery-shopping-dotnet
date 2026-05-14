@@ -177,6 +177,7 @@ public class FriscoStore(
 
             if (!choice.IsProductChosen)
             {
+                Thread.Sleep(TimeSpan.FromSeconds(3));
                 continue;
             }
 
@@ -198,6 +199,7 @@ public class FriscoStore(
             await httpClient.PutAsync(HttpClientName.FriscoUser, addToCartRequestUri, requestBody);
             await tracing.EndApiRequestAsync();
             boughtGroceryItems.Add(groceryItem);
+            Thread.Sleep(TimeSpan.FromSeconds(3));
         }
 
         await logger.LogShoppingEnd(groceryShoppingId);
