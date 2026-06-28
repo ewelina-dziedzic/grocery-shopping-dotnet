@@ -8,7 +8,7 @@ Resources:
     Properties:
       CodeUri: ./GroceryShopping.Lambda.SyncProducts/src/GroceryShopping.Lambda.SyncProducts
       Handler: GroceryShopping.Lambda.SyncProducts::GroceryShopping.Lambda.SyncProducts.Function::Handler
-      Runtime: dotnet8
+      Runtime: dotnet10
       Timeout: 900
       MemorySize: 1024
       FunctionName: grocery-shopping-sync-products
@@ -28,7 +28,7 @@ Resources:
     Properties:
       CodeUri: ./GroceryShopping.Lambda.Listify/src/GroceryShopping.Lambda.Listify
       Handler: GroceryShopping.Lambda.Listify::GroceryShopping.Lambda.Listify.Function::Handler
-      Runtime: dotnet8
+      Runtime: dotnet10
       Timeout: 900
       MemorySize: 128
       FunctionName: grocery-shopping-listify-dotnet
@@ -48,7 +48,7 @@ Resources:
     Properties:
       CodeUri: ./GroceryShopping.Lambda.Schedule/src/GroceryShopping.Lambda.Schedule
       Handler: GroceryShopping.Lambda.Schedule::GroceryShopping.Lambda.Schedule.Function::Handler
-      Runtime: dotnet8
+      Runtime: dotnet10
       Timeout: 900
       MemorySize: 128
       FunctionName: grocery-shopping-schedule-dotnet
@@ -68,7 +68,7 @@ Resources:
     Properties:
       CodeUri: ./GroceryShopping.Lambda.Shop/src/GroceryShopping.Lambda.Shop
       Handler: GroceryShopping.Lambda.Shop::GroceryShopping.Lambda.Shop.Function::Handler
-      Runtime: dotnet8
+      Runtime: dotnet10
       Timeout: 900
       MemorySize: 256
       FunctionName: grocery-shopping-shop-dotnet

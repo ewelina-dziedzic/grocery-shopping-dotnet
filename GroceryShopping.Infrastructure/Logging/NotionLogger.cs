@@ -28,7 +28,7 @@ public class NotionLogger : ILogger
         var page = await _client.Pages.CreateAsync(
             new PagesCreateParameters
             {
-                Parent = new DatabaseParentInput { DatabaseId = _options.GroceryShoppingDatabaseId },
+                Parent = new DatabaseParentRequest { DatabaseId = _options.GroceryShoppingDatabaseId },
                 Properties = new Dictionary<string, PropertyValue>
                 {
                     {
@@ -70,7 +70,7 @@ public class NotionLogger : ILogger
             await _client.Pages.CreateAsync(
                 new PagesCreateParameters
                 {
-                    Parent = new DatabaseParentInput { DatabaseId = _options.ChoiceDatabaseId },
+                    Parent = new DatabaseParentRequest { DatabaseId = _options.ChoiceDatabaseId },
                     Properties = new Dictionary<string, PropertyValue>
                     {
                         {
@@ -119,7 +119,7 @@ public class NotionLogger : ILogger
             await _client.Pages.CreateAsync(
                 new PagesCreateParameters
                 {
-                    Parent = new DatabaseParentInput { DatabaseId = _options.ChoiceDatabaseId },
+                    Parent = new DatabaseParentRequest { DatabaseId = _options.ChoiceDatabaseId },
                     Properties = new Dictionary<string, PropertyValue>
                     {
                         {
