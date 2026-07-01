@@ -17,10 +17,11 @@ public class NotionMealPlan(IOptions<NotionOptions> options) : IMealPlan
             {
                 AuthToken = options.Value.ApiKey,
             });
+        var ingredientsDataSourceId = options.Value.IngredientsDataSourceId;
 
         var query = new QueryDataSourceRequest
         {
-            DataSourceId = options.Value.IngredientsDatabaseId,
+            DataSourceId = ingredientsDataSourceId,
             Filter = new CompoundFilter
             {
                 And = new List<Filter>

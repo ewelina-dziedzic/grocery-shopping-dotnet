@@ -25,10 +25,11 @@ public class NotionLogger : ILogger
 
     public async Task<string> LogShoppingStart(string storeName)
     {
+        var groceryShoppingDataSourceId = _options.GroceryShoppingDataSourceId;
         var page = await _client.Pages.CreateAsync(
             new PagesCreateParameters
             {
-                Parent = new DatabaseParentRequest { DatabaseId = _options.GroceryShoppingDatabaseId },
+                Parent = new DataSourceParentRequest { DataSourceId = groceryShoppingDataSourceId },
                 Properties = new Dictionary<string, PropertyValue>
                 {
                     {
@@ -60,6 +61,7 @@ public class NotionLogger : ILogger
 
     public async Task LogChoice(string groceryShoppingId, GroceryItem groceryItem, Choice choice)
     {
+        var choiceDataSourceId = _options.ChoiceDataSourceId;
         if (choice.IsProductChosen)
         {
             if (choice.Product == null)
@@ -70,7 +72,7 @@ public class NotionLogger : ILogger
             await _client.Pages.CreateAsync(
                 new PagesCreateParameters
                 {
-                    Parent = new DatabaseParentRequest { DatabaseId = _options.ChoiceDatabaseId },
+                    Parent = new DataSourceParentRequest { DataSourceId = choiceDataSourceId },
                     Properties = new Dictionary<string, PropertyValue>
                     {
                         {
@@ -119,7 +121,7 @@ public class NotionLogger : ILogger
             await _client.Pages.CreateAsync(
                 new PagesCreateParameters
                 {
-                    Parent = new DatabaseParentRequest { DatabaseId = _options.ChoiceDatabaseId },
+                    Parent = new DataSourceParentRequest { DataSourceId = choiceDataSourceId },
                     Properties = new Dictionary<string, PropertyValue>
                     {
                         {
